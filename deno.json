@@ -1,12 +1,13 @@
 {
-  "fmt": {
-    "semiColons": false,
-    "singleQuote": true
-  },
   "tasks": {
-    "start": "deno run --allow-net main.ts"
+    "dev": "denoflare serve bazos-bot --secret-binding TELEGRAM_WEBHOOK_SECRET:\"$TELEGRAM_WEBHOOK_SECRET\" --secret-binding TELEGRAM_API_KEY:\"$TELEGRAM_API_KEY\" --secret-binding TELEGRAM_CHAT_ID:\"$TELEGRAM_CHAT_ID\" --bundle 'backend=esbuild'",
+    "deploy": "denoflare push bazos-bot --secret-binding TELEGRAM_WEBHOOK_SECRET:\"$TELEGRAM_WEBHOOK_SECRET\" --secret-binding TELEGRAM_API_KEY:\"$TELEGRAM_API_KEY\" --secret-binding TELEGRAM_CHAT_ID:\"$TELEGRAM_CHAT_ID\" --verbose --bundle 'backend=esbuild'"
   },
-  "imports": {
-    "cheerio": "npm:cheerio@1.0.0-rc.12"
+  "fmt": {
+    "options": {
+      "indentWidth": 2,
+      "singleQuote": true,
+      "semiColons": false
+    }
   }
 }

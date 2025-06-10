@@ -1,0 +1,9 @@
+{
+    "$schema": "https://raw.githubusercontent.com/skymethod/denoflare/v0.6.0/common/config.schema.json",
+    "scripts": {
+        "bazos-bot": {
+            "path": "src/main.ts",
+            "localPort": 8000
+        }
+    }
+}

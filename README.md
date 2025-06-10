@@ -1,8 +1,11 @@
 # Bazos watchdog
 
-> A simple automated watchdog for Bazos.cz/Bazos.sk portals that periodically checks the specified URLs and sends a Telegram message when a new offer appears
+> A simple automated watchdog for Bazos.cz/Bazos.sk portals that periodically
+> checks the specified URLs and sends a Telegram message when a new offer
+> appears
 
 # Prerequisites
+
 - Deno runtime
 - Redis instance
 - Telegram credentials & bot
@@ -15,4 +18,3 @@
 - send telegram message
 
 - telegram bot
-
