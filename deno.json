@@ -1,0 +1,12 @@
+{
+  "fmt": {
+    "semiColons": false,
+    "singleQuote": true
+  },
+  "tasks": {
+    "start": "deno run --allow-net main.ts"
+  },
+  "imports": {
+    "cheerio": "npm:cheerio@1.0.0-rc.12"
+  }
+}
