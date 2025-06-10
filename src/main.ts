@@ -6,17 +6,16 @@ import * as watchdog from './services/watchdog.ts'
 interface Env {
   TELEGRAM_WEBHOOK_SECRET?: string
   TELEGRAM_API_KEY?: string
-  TELEGRAM_CHAT_ID?: string
 }
 
 export default {
   async fetch(request: Request, env: Env) {
     if (
-      !env.TELEGRAM_API_KEY || !env.TELEGRAM_CHAT_ID ||
+      !env.TELEGRAM_API_KEY ||
       !env.TELEGRAM_WEBHOOK_SECRET
     ) {
       return new Response(
-        'Missing TELEGRAM_API_KEY or TELEGRAM_CHAT_ID or TELEGRAM_WEBHOOK_SECRET',
+        'Missing TELEGRAM_API_KEY or TELEGRAM_WEBHOOK_SECRET',
         { status: 500 },
       )
     }
@@ -75,19 +74,19 @@ export default {
     }
   },
 
-	async scheduled(
+  async scheduled(
     controller: ScheduledController,
     env: Env,
     ctx: ExecutionContext,
   ) {
     ctx.waitUntil(async () => {
-			// TODO: implement logic here
-			  // 	// Fetch all URLs from Redis
-  // fetch all URLs in bazos
-  // check diff of new vs stored
-  // call updateResultsForURL
-  // if there are new offers, send Telegram message to users
-		});
+      // TODO: implement logic here
+      // 	// Fetch all URLs from Redis
+      // fetch all URLs in bazos
+      // check diff of new vs stored
+      // call updateResultsForURL
+      // if there are new offers, send Telegram message to users
+    })
   },
 }
 
