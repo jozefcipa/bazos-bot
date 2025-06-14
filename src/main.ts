@@ -1,21 +1,20 @@
 import { fetchOffers, isValidBazosURL } from './api/bazos.ts'
 import { TelegramBot, TelegramCommand } from './api/telegram.ts'
-import { escapeMarkdown } from './utils/string.ts'
+import { escapeMarkdown, isUrl } from './utils/string.ts'
+import Storage, { KVStorage } from './services/storage.ts'
 import * as watchdog from './services/watchdog.ts'
 
 interface Env {
   TELEGRAM_WEBHOOK_SECRET?: string
   TELEGRAM_API_KEY?: string
+  KV?: KVStorage
 }
 
 export default {
   async fetch(request: Request, env: Env) {
-    if (
-      !env.TELEGRAM_API_KEY ||
-      !env.TELEGRAM_WEBHOOK_SECRET
-    ) {
+    if (!env.TELEGRAM_API_KEY || !env.TELEGRAM_WEBHOOK_SECRET) {
       return new Response(
-        'Missing TELEGRAM_API_KEY or TELEGRAM_WEBHOOK_SECRET',
+        'Missing some of the ENV vars [TELEGRAM_API_KEY, TELEGRAM_WEBHOOK_SECRET]',
         { status: 500 },
       )
     }
@@ -23,6 +22,16 @@ export default {
     if (request.method !== 'POST') {
       return new Response('Method not allowed', { status: 405 })
     }
+
+    if (!env.KV) {
+      console.error('KV storage is not bound to the worker.')
+      return new Response(
+        'KV storage is not bound to the worker.',
+        { status: 500 },
+      )
+    }
+
+    Storage.init(env.KV)
 
     try {
       // Init Telegram and validate request
@@ -59,7 +68,7 @@ export default {
         await telegram.sendMessage(user, {
           text: '✅ URL has been added to the watchlist',
         })
-      } else if (URL.canParse(text)) {
+      } else if (isUrl(text)) {
         await telegram.sendMessage(user, {
           text: '😵‍💫 The URL must be from Bazos search page',
         })

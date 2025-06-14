@@ -3,7 +3,10 @@
     "scripts": {
         "bazos-bot": {
             "path": "src/main.ts",
-            "localPort": 8000
+            "localPort": 8000,
+            "bindings": {
+                "KV": { "kvNamespace": "2938b954407a4865aa593691fd74d9dd" },
+            }
         }
     }
 }

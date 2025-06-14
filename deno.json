@@ -1,7 +1,7 @@
 {
   "tasks": {
     "dev": "denoflare serve bazos-bot --secret-binding TELEGRAM_WEBHOOK_SECRET:\"$TELEGRAM_WEBHOOK_SECRET\" --secret-binding TELEGRAM_API_KEY:\"$TELEGRAM_API_KEY\" --bundle 'backend=esbuild'",
-    "deploy": "denoflare push bazos-bot --secret-binding TELEGRAM_WEBHOOK_SECRET:\"$TELEGRAM_WEBHOOK_SECRET\" --secret-binding TELEGRAM_API_KEY:\"$TELEGRAM_API_KEY\" --verbose --bundle 'backend=esbuild'"
+    "deploy": "denoflare push bazos-bot --verbose --bundle 'backend=esbuild'"
   },
   "fmt": {
     "indentWidth": 2,
