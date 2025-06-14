@@ -43,7 +43,7 @@ export class TelegramBot {
             chat_id: user.chatId,
             parse_mode: 'MarkdownV2',
             link_preview_options: message.imgPreviewURL
-              ? { url: message.imgPreviewURL }
+              ? { url: message.imgPreviewURL, prefer_large_media: true }
               : undefined,
             text: message.text,
           }),

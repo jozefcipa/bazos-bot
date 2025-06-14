@@ -51,12 +51,12 @@ export default {
           user,
           {
             text: `*👀 Watched URLs*\n${
-              offers.map((url) => escapeMarkdown(url)).join('\n')
+              Object.keys(offers).map((url) => escapeMarkdown(url)).join('\n')
             }`,
           },
         )
       } else if (text.startsWith(TelegramCommand.STOP)) {
-        await watchdog.unwatchURL(
+        await watchdog.removeURL(
           text.replace(TelegramCommand.STOP, '').trim(),
           user,
         )
@@ -64,7 +64,7 @@ export default {
           text: '✅ URL has been removed from the watchlist',
         })
       } else if (isValidBazosURL(text)) {
-        await watchdog.watchURL(text, user)
+        await watchdog.addURL(text, user)
         await telegram.sendMessage(user, {
           text: '✅ URL has been added to the watchlist',
         })
@@ -84,37 +84,77 @@ export default {
   },
 
   async scheduled(
-    controller: ScheduledController,
+    _: unknown,
     env: Env,
-    ctx: ExecutionContext,
   ) {
-    ctx.waitUntil(async () => {
-      // TODO: implement logic here
-      // 	// Fetch all URLs from Redis
-      // fetch all URLs in bazos
-      // check diff of new vs stored
-      // call updateResultsForURL
-      // if there are new offers, send Telegram message to users
-    })
+    if (!env.TELEGRAM_API_KEY || !env.TELEGRAM_WEBHOOK_SECRET) {
+      console.error(
+        'Missing some of the ENV vars [TELEGRAM_API_KEY, TELEGRAM_WEBHOOK_SECRET]',
+      )
+      return
+    }
+
+    if (!env.KV) {
+      console.error('KV storage is not bound to the worker.')
+      return
+    }
+
+    Storage.init(env.KV)
+
+    const telegram = new TelegramBot(
+      env.TELEGRAM_API_KEY,
+      env.TELEGRAM_WEBHOOK_SECRET,
+    )
+
+    const users = await watchdog.listUsers()
+
+    for (const user of users) {
+      const urls = await watchdog.listURLsForUser(user)
+
+      await Promise.all(
+        Object.entries(urls).map(async ([url, oldOffers]) => {
+          try {
+            const newOffers = await fetchOffers(url)
+
+            const oldOffersSet = new Set(oldOffers.map((offer) => offer.url))
+            const offersToNotify = newOffers.filter(
+              (offer) => !oldOffersSet.has(offer.url),
+            )
+
+            if (offersToNotify.length > 0) {
+              for (const offer of offersToNotify) {
+                await telegram.sendMessage(
+                  user,
+                  {
+                    text: `
+*${escapeMarkdown(offer.title)}*
+
+${escapeMarkdown(offer.description)}
+
+📍 ${escapeMarkdown(offer.location)}
+💰 *${escapeMarkdown(offer.price)}*
+
+[Open on Bazos](${offer.url})
+`,
+                    imgPreviewURL: offer.img,
+                  },
+                )
+              }
+
+              // Save new offers to storage
+              await watchdog.updateResultsForURL(user, url, newOffers)
+              console.log(
+                `Notified ${user.username} about ${offersToNotify.length} new offers for URL: ${url}`,
+              )
+            }
+          } catch (err) {
+            console.error(
+              `Error while processing URL ${url} for user ${user.username}`,
+              err,
+            )
+          }
+        }),
+      )
+    }
   },
 }
-
-//   const offers = await fetchOffers(url)
-
-// 			const text = `
-// *${escapeMarkdown('New Offer! 😱')}*
-// *${escapeMarkdown(offer.title)}*
-
-// ${escapeMarkdown(offer.description)}
-
-// 📍 ${escapeMarkdown(offer.location)}
-// 💰 *${escapeMarkdown(offer.price)}*
-
-// [Open on Bazos](${offer.url})
-// `
-// }
-
-// PLAN
-// - setup redis
-// - setup cron job to run the script every day
-// - setup proper telegram webhook with secret

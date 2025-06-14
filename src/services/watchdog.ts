@@ -1,45 +1,89 @@
 import { BazosOffer } from '../api/bazos.ts'
 import { TelegramUser } from '../api/telegram.ts'
+import Storage from './storage.ts'
 
-const getUserRedisKey = (user: TelegramUser): string => {
+const getUserKey = (user: TelegramUser): string => {
   return `user:${user.username}:${user.chatId}`
 }
 
-export async function listURLsForUser(user: TelegramUser): Promise<string[]> {
-  const userKey = getUserRedisKey(user)
+// Storage structure
+// {
+//  [userID]: {
+//   'bazos-url': [
+//     { Bazos Offer },
+//     { Bazos Offer },
+//     { Bazos Offer },
+//    ]
+//  }
+// }
 
-  // TODO: call redis SMEMBERS
+export async function listURLsForUser(
+  user: TelegramUser,
+): Promise<Record<string, BazosOffer[]>> {
+  const userKey = getUserKey(user)
 
-  return [
-    'https://www.bazos.cz/search.php?hledat=ipod+nano+7&rubriky=www&hlokalita=&humkreis=25&cenaod=500&cenado=3000&Submit=Hledat&order=&kitx=ano',
-  ]
+  const userURLs = await Storage.get(userKey)
+  if (!userURLs) {
+    return {}
+  }
+
+  if (typeof userURLs === 'string') {
+    return JSON.parse(userURLs) as Record<string, BazosOffer[]>
+  }
+
+  // KV seems to automatically parse JSON strings
+  return userURLs as unknown as Record<string, BazosOffer[]>
 }
 
-export async function watchURL(url: string, user: TelegramUser): Promise<void> {
-  // TODO: Implement the logic to stop watching a URL for a user
+export async function addURL(url: string, user: TelegramUser): Promise<void> {
+  const userKey = getUserKey(user)
 
-  const userKey = getUserRedisKey(user)
-
-  // TODO: call redis SADD
+  const userURLs = await listURLsForUser(user)
+  if (!userURLs[url]) {
+    // If the URL is not already in the user's list, add it
+    const newURLs = {
+      ...userURLs,
+      [url]: [],
+    }
+    await Storage.put(userKey, JSON.stringify(newURLs))
+  }
 }
 
-export async function unwatchURL(
+export async function removeURL(
   url: string,
   user: TelegramUser,
 ): Promise<void> {
-  // TODO: Implement the logic to stop watching a URL for a user
+  const userKey = getUserKey(user)
 
-  const userKey = getUserRedisKey(user)
-
-  // TODO: call redis SREM
-}
-
-export async function getResultsForURL(url: string): Promise<BazosOffer[]> {
-  return []
+  const userURLs = await listURLsForUser(user)
+  if (userURLs[url]) {
+    // If the URL exists in the user's list, remove it
+    const newURLs = {
+      ...userURLs,
+      [url]: undefined, // Remove the URL from the list
+    }
+    await Storage.put(userKey, JSON.stringify(newURLs))
+  }
 }
 
 export async function updateResultsForURL(
+  user: TelegramUser,
   url: string,
   foundOffers: BazosOffer[],
 ): Promise<void> {
+  const userKey = getUserKey(user)
+
+  const userURLs = await listURLsForUser(user)
+  userURLs[url] = foundOffers
+  await Storage.put(userKey, JSON.stringify(userURLs))
+}
+
+export async function listUsers(): Promise<TelegramUser[]> {
+  const { keys } = await Storage.list()
+
+  return keys.map(({ name: key }) => {
+    const [_, username, chatId] = key.split(':')
+
+    return { username, chatId } as TelegramUser
+  })
 }
