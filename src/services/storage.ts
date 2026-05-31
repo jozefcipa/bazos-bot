@@ -26,7 +26,7 @@ class Storage implements KVStorage {
   async get(key: string): Promise<string> {
     this.assertInitialized()
     const value = await this.kv.get(key)
-    return value ? JSON.parse(value) : null
+    return value ? JSON.parse(value) : ''
   }
 
   async put(key: string, value: string): Promise<void> {

@@ -44,8 +44,8 @@ function parseOffers($: cheerio.CheerioAPI): BazosOffer[] {
 }
 
 export const isValidBazosURL = (url: string): boolean => {
-  // url needs to be either bazos.cz/search.php or bazos.sk/search.php, the rest of the URL is not important
-  const regex = /^(https?:\/\/)?(www\.)?(bazos\.cz|bazos\.sk)\/search\.php/
+  // Allow bazos.cz|bazos.sk search URLs and subdomain URLs like ostatni.bazos.cz/...
+  const regex = /^(https?:\/\/)?((www\.)?(bazos\.cz|bazos\.sk)\/search\.php|[a-z0-9-]+\.(bazos\.cz|bazos\.sk)\/)/i
   return regex.test(url)
 }
 
